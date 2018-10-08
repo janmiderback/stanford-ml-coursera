@@ -40,22 +40,62 @@ Theta_grad = zeros(size(Theta));
 %                     partial derivatives w.r.t. to each element of Theta
 %
 
+%% Non-vectorized calc. of J
+% for i=1:num_movies
+%     for j=1:num_users
+%         uparam = Theta(j, :);
+%         mfeat = X(i, :);
+%         J = J + R(i, j) * (mfeat * uparam - Y(i, j)) ^ 2;
+%     end
+% end
+% J = J / 2;
 
+%% Vectorized calc. of J
+J = R .* ((X * Theta' - Y) .^ 2);
+J = sum(sum(J)) / 2;
 
+%% Non-vectorized calc. of X_grad
+% for i = 1:num_movies
+%     for k = 1:num_features       
+%         X_grad(i, k) = 0;
+%         for j = 1:num_users
+%             uparam = Theta(j, :);
+%             mfeat = X(i, :);
+%             X_grad(i, k) = X_grad(i, k) + R(i, j) * (mfeat * uparam' - Y(i, j)) * Theta(j, k);
+%         end
+%     end
+% end
 
+%% Vectorized calc. of X_grad
+X_grad = R .* (X * Theta' - Y);
+X_grad = X_grad * Theta;
 
+%% Non-vectorized calc. of Theta_grad
+% for j = 1:num_users
+%     for k = 1:num_features       
+%         Theta_grad(j, k) = 0;
+%         for i = 1:num_movies
+%             uparam = Theta(j, :);
+%             mfeat = X(i, :);
+%             Theta_grad(j, k) = Theta_grad(j, k) + R(i, j) * (mfeat * uparam' - Y(i, j)) * X(i, k);
+%         end
+%     end
+% end
 
+%% Vectorized calc. of Theta_grad
+Theta_grad = R .* (X * Theta' - Y);
+Theta_grad = Theta_grad' * X;
 
+%% Regularized cost function
+R1 = sum(sum(Theta .^ 2));
+R2 = sum(sum(X .^ 2));
+J = J + (lambda / 2) * (R1 + R2);
 
+%% Regularized gradient
+X_grad = X_grad + lambda * X;
+Theta_grad = Theta_grad + lambda * Theta;
 
-
-
-
-
-
-
-
-% =============================================================
+%% ============================================================
 
 grad = [X_grad(:); Theta_grad(:)];
 
